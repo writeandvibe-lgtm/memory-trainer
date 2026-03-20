@@ -1,0 +1,2509 @@
+<!DOCTYPE html><html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Memory Trainer</title>
+  <style>
+    :root {
+      --bg: #f8fafc;
+      --card: #ffffff;
+      --text: #0f172a;
+      --muted: #64748b;
+      --line: #e2e8f0;
+      --soft: #f1f5f9;
+      --accent: #0f172a;
+      --accent-2: #1e293b;
+      --good: #16a34a;
+      --warn: #ca8a04;
+      --bad: #dc2626;
+      --radius: 18px;
+      --shadow: 0 8px 24px rgba(15, 23, 42, 0.06);
+    }* { box-sizing: border-box; }
+body {
+  margin: 0;
+  font-family: Inter, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  background: var(--bg);
+  color: var(--text);
+}
+
+.app {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 16px;
+  display: grid;
+  gap: 16px;
+}
+
+.grid {
+  display: grid;
+  gap: 16px;
+}
+
+@media (min-width: 980px) {
+  .layout {
+    grid-template-columns: 2fr 1fr;
+    align-items: start;
+  }
+}
+
+.card {
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  padding: 16px;
+}
+
+.dark-card {
+  background: var(--accent);
+  color: #fff;
+  border-radius: var(--radius);
+  padding: 16px;
+}
+
+h1, h2, h3, p { margin: 0; }
+h1 { font-size: 1.6rem; }
+h2 { font-size: 1.1rem; }
+h3 { font-size: 1rem; }
+
+.muted { color: var(--muted); }
+.dark-card .muted { color: #cbd5e1; }
+
+.row {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.stack { display: grid; gap: 12px; }
+.stack-sm { display: grid; gap: 8px; }
+.chips { display: flex; gap: 8px; flex-wrap: wrap; }
+
+.chip {
+  font-size: 0.82rem;
+  padding: 8px 12px;
+  background: var(--soft);
+  border: 1px solid var(--line);
+  border-radius: 999px;
+}
+
+.day-grid {
+  display: grid;
+  gap: 10px;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+@media (min-width: 700px) {
+  .day-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+}
+
+.day-btn {
+  text-align: left;
+  padding: 12px;
+  border-radius: 16px;
+  border: 1px solid transparent;
+  background: var(--soft);
+  cursor: pointer;
+  color: var(--text);
+}
+
+.day-btn.active {
+  background: #fff;
+  border-color: #cbd5e1;
+  box-shadow: var(--shadow);
+}
+
+.btn-row {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+button {
+  border: 0;
+  border-radius: 14px;
+  padding: 11px 14px;
+  cursor: pointer;
+  font-weight: 600;
+  background: var(--accent);
+  color: #fff;
+}
+
+button.secondary {
+  background: #fff;
+  color: var(--text);
+  border: 1px solid var(--line);
+}
+
+button.ghost {
+  background: transparent;
+  color: inherit;
+  border: 1px solid rgba(255,255,255,0.2);
+}
+
+.fields-2, .fields-3 {
+  display: grid;
+  gap: 12px;
+}
+
+@media (min-width: 760px) {
+  .fields-2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .fields-3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+}
+
+label {
+  display: grid;
+  gap: 6px;
+  font-size: 0.92rem;
+  font-weight: 600;
+}
+
+input[type="text"], textarea {
+  width: 100%;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  padding: 12px;
+  font: inherit;
+  color: var(--text);
+  background: #fff;
+}
+
+textarea { min-height: 90px; resize: vertical; }
+
+input[type="range"] { width: 100%; }
+
+.section-soft {
+  background: var(--soft);
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  padding: 14px;
+}
+
+.progress-wrap {
+  display: grid;
+  gap: 8px;
+}
+
+.progress {
+  width: 100%;
+  height: 10px;
+  border-radius: 999px;
+  background: #e2e8f0;
+  overflow: hidden;
+}
+
+.progress-bar {
+  height: 100%;
+  width: 0%;
+  background: var(--accent);
+  transition: width 0.25s ease;
+}
+
+.score {
+  font-size: 2.4rem;
+  font-weight: 800;
+}
+
+.pill {
+  display: inline-block;
+  padding: 8px 12px;
+  border-radius: 999px;
+  background: var(--soft);
+  border: 1px solid var(--line);
+  font-size: 0.85rem;
+  font-weight: 700;
+}
+
+.tiny { font-size: 0.8rem; }
+.list { display: grid; gap: 10px; }
+.saved-item { background: var(--soft); border: 1px solid var(--line); border-radius: 16px; padding: 12px; }
+.hidden { display: none !important; }
+
+  </style>
+</head>
+<body>
+  <div class="app layout">
+    <div class="grid">
+      <section class="card stack">
+        <div class="row">
+          <div class="stack-sm">
+            <h1>Memory Trainer</h1>
+            <p class="muted">Single-file mobile app for your 15-minute daily memory training.</p>
+          </div>
+          <div class="chips">
+            <span class="chip" id="currentDayChip">Day 1</span>
+            <span class="chip" id="streakChip">Streak 0</span>
+          </div>
+        </div><div class="day-grid" id="dayGrid"></div>
+
+    <div class="section-soft stack-sm">
+      <div class="tiny muted">Goal</div>
+      <h2 id="goalTitle"></h2>
+      <p class="muted" id="goalPrompt"></p>
+      <p class="tiny"><strong>Focus:</strong> <span id="goalFocus"></span></p>
+    </div>
+
+    <div class="dark-card stack-sm">
+      <div class="row">
+        <div class="stack-sm" style="flex:1; min-width: 220px;">
+          <div class="tiny muted">Today's Exercise</div>
+          <h3 id="todayExercise"></h3>
+        </div>
+        <button class="ghost" id="refreshExerciseBtn">Refresh</button>
+      </div>
+    </div>
+
+    <div class="fields-2">
+      <div class="progress-wrap">
+        <div class="row">
+          <span><strong>Completion</strong></span>
+          <span id="completionText">0%</span>
+        </div>
+        <div class="progress"><div class="progress-bar" id="completionBar"></div></div>
+      </div>
+
+      <div class="card" style="padding:14px; box-shadow:none;">
+        <div class="row">
+          <div class="stack-sm">
+            <div class="tiny muted">15-minute timer</div>
+            <div class="score" style="font-size:1.8rem;" id="timerText">15:00</div>
+          </div>
+          <div class="btn-row">
+            <button class="secondary" id="startPauseTimerBtn">Start</button>
+            <button class="secondary" id="resetTimerBtn">Reset</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="btn-row">
+      <button id="startExerciseBtn">Start Exercise</button>
+      <button class="secondary" id="topicIdeaBtn">Give Me a Topic Idea</button>
+      <button class="secondary" id="saveBtn">Save Progress</button>
+      <button class="secondary" id="nextDayBtn">Next Day</button>
+      <button class="secondary" id="resetBtn">Reset</button>
+    </div>
+  </section>
+
+  <section class="card stack hidden" id="exerciseSection">
+    <h2>Daily Tracker</h2>
+
+    <div class="fields-2">
+      <label>Topic
+        <input type="text" id="topic" placeholder="What topic did you study today?" />
+      </label>
+      <label>Source summary
+        <input type="text" id="sourceSummary" placeholder="Briefly summarize the source so the app can score you" />
+      </label>
+    </div>
+
+    <div class="section-soft stack">
+      <h3>Recall</h3>
+      <label>Main idea from memory
+        <textarea id="recalledMainIdea"></textarea>
+      </label>
+      <div class="fields-3">
+        <label>Key point 1
+          <input type="text" id="recalledKey1" />
+        </label>
+        <label>Key point 2
+          <input type="text" id="recalledKey2" />
+        </label>
+        <label>Key point 3
+          <input type="text" id="recalledKey3" />
+        </label>
+      </div>
+      <label>One example from memory
+        <textarea id="recalledExample"></textarea>
+      </label>
+    </div>
+
+    <div class="section-soft stack">
+      <h3>Compression</h3>
+      <label>One-line summary
+        <textarea id="oneLineSummary"></textarea>
+      </label>
+      <label>How can you use this in real life?
+        <textarea id="realLifeUse"></textarea>
+      </label>
+      <label>3 to 5 keywords, separated by commas
+        <input type="text" id="keywords" />
+      </label>
+      <label>Your reinforcement question
+        <input type="text" id="triggerQuestion" />
+      </label>
+    </div>
+
+    <div class="section-soft stack hidden" id="delayedRecallWrap">
+      <h3>Delayed Recall</h3>
+      <label>Come back later and recall the topic again here
+        <textarea id="delayedRecall"></textarea>
+      </label>
+    </div>
+
+    <div class="section-soft stack hidden" id="connectionWrap">
+      <h3>Connection</h3>
+      <label>How does this connect to something you learned earlier?
+        <textarea id="connectionToPrevious"></textarea>
+      </label>
+    </div>
+
+    <div class="fields-2">
+      <div class="card" style="padding:14px; box-shadow:none;">
+        <label>Difficulty: <span id="difficultyValue">3</span>/5
+          <input type="range" min="1" max="5" value="3" id="difficulty" />
+        </label>
+      </div>
+      <div class="card" style="padding:14px; box-shadow:none;">
+        <label>Focus Level: <span id="focusLevelValue">3</span>/5
+          <input type="range" min="1" max="5" value="3" id="focusLevel" />
+        </label>
+      </div>
+    </div>
+  </section>
+</div>
+
+<aside class="grid">
+  <section class="card stack">
+    <h2>Rating & Corrections</h2>
+    <div class="score" id="scoreText">0%</div>
+    <span class="pill" id="ratingPill">Needs Work</span>
+    <p class="muted" id="ratingTip">Fill in your source summary and recall to get a score.</p>
+
+    <div class="section-soft stack-sm">
+      <div>
+        <h3>Missing terms</h3>
+        <p class="muted" id="missingTerms">No obvious missing terms yet.</p>
+      </div>
+      <div>
+        <h3>Extra terms</h3>
+        <p class="muted" id="extraTerms">No obvious extras yet.</p>
+      </div>
+    </div>
+
+    <div class="card" style="padding:14px; box-shadow:none;">
+      <h3>Coaching notes</h3>
+      <div class="list muted" id="coachingNotes"></div>
+    </div>
+  </section>
+
+  <section class="card stack">
+    <h2>Saved Sessions</h2>
+    <p class="muted tiny">Saved locally in your browser on this device.</p>
+    <div class="list" id="savedSessions"></div>
+  </section>
+</aside>
+
+  </div>  <script>
+    const STORAGE_KEY = "memory-trainer-single-file-v1";
+    const TIMER_KEY = "memory-trainer-single-file-timer-v1";
+
+    const dayPlans = [
+      { day: 1, title: "Memory Activation", goal: "Stop passive intake and start forced recall.", focus: "Main idea + 3 key points + 1 example", prompt: "Choose one short useful topic. Study it for 5 minutes, then recall the main idea, 3 key points, and 1 example without looking." },
+      { day: 2, title: "Clean Recall", goal: "Improve accuracy under no-look conditions.", focus: "Main idea + 3 key points + 2 examples", prompt: "Choose a short topic. Recall it without looking, then rate how accurate you were after checking." },
+      { day: 3, title: "Compression Training", goal: "Learn to simplify and retain.", focus: "1 sentence + 5 keywords", prompt: "Study a topic, recall it, then compress it into one sentence and five keywords." },
+      { day: 4, title: "Delayed Recall", goal: "Strengthen long-term retrieval.", focus: "Recall now and later", prompt: "Do your exercise, then return later and recall the same topic again from memory." },
+      { day: 5, title: "Connection Building", goal: "Link today’s learning to previous days.", focus: "Main idea + key points + 1 connection", prompt: "Study one topic, then explain how it connects to something you learned earlier this week." },
+      { day: 6, title: "Teach Back", goal: "Retain by explaining clearly.", focus: "Explain simply", prompt: "Study one topic, recall it, then explain it in very simple language." },
+      { day: 7, title: "Weekly Memory Test", goal: "Pull the week together into one memory network.", focus: "Recall multiple topics", prompt: "Recall the main ideas from the week and write what ties them together." }
+    ];
+
+    const topicIdeas = [
+      "A short business article",
+      "A sales concept you need right now",
+      "A pricing principle",
+      "A system or process idea",
+      "A short YouTube explainer",
+      "A marketing concept",
+      "A negotiation lesson",
+      "A customer service principle",
+      "A productivity technique",
+      "A finance basic you want to remember"
+    ];
+
+    const dailyExercises = {
+      1: [
+        "Study one small topic for 5 minutes. Then write the main idea, 3 key points, and 1 real-world example from memory.",
+        "Choose one concept you actually need this week. Recall it without looking and compress it into one clean explanation.",
+        "Read one short useful article. Then rebuild it from memory using only the key idea, 3 points, and one example."
+      ],
+      2: [
+        "Study one topic for 5 minutes. Recall the main idea, 3 key points, and 2 examples before checking.",
+        "Choose a short explainer. Write what it said from memory first, then compare for gaps.",
+        "Take one business idea and recall it without notes. Push for accuracy, not volume."
+      ],
+      3: [
+        "Study one topic and compress it into 1 sentence and 5 keywords from memory.",
+        "Read one page and turn it into a one-line rule plus 5 anchors.",
+        "Choose a short concept and strip it down to the simplest memorable form."
+      ],
+      4: [
+        "Study one topic. Do immediate recall now, then come back later for delayed recall.",
+        "Read one short lesson, recall it now, then test yourself again later today.",
+        "Choose one concept and challenge your brain twice: immediate and delayed retrieval."
+      ],
+      5: [
+        "Study one topic and explain how it connects to something you learned earlier this week.",
+        "Take a new idea and link it to an older one. The connection is the memory booster.",
+        "Read one short concept and force one strategic connection to prior learning."
+      ],
+      6: [
+        "Study one topic and teach it back simply, as if to a child.",
+        "Choose one concept and explain it in plain language with no jargon.",
+        "Take one idea and rewrite it so even a beginner could understand it."
+      ],
+      7: [
+        "Without reviewing first, recall the main ideas from the week and write the pattern connecting them.",
+        "Use today as a memory test: retrieve the week, then organize the week.",
+        "Pull together several topics and explain the bigger pattern linking them."
+      ]
+    };
+
+    const fields = [
+      "topic", "sourceSummary", "recalledMainIdea", "recalledKey1", "recalledKey2", "recalledKey3",
+      "recalledExample", "oneLineSummary", "realLifeUse", "keywords", "triggerQuestion", "delayedRecall",
+      "connectionToPrevious", "difficulty", "focusLevel"
+    ];
+
+    const defaultState = {
+      day: 1,
+      streak: 0,
+      started: false,
+      todayExerciseIndex: 0,
+      history: [],
+      form: {
+        topic: "",
+        sourceSummary: "",
+        recalledMainIdea: "",
+        recalledKey1: "",
+        recalledKey2: "",
+        recalledKey3: "",
+        recalledExample: "",
+        oneLineSummary: "",
+        realLifeUse: "",
+        keywords: "",
+        triggerQuestion: "",
+        delayedRecall: "",
+        connectionToPrevious: "",
+        difficulty: 3,
+        focusLevel: 3
+      }
+    };
+
+    let state = loadState();
+    let timerState = loadTimer();
+    let timerInterval = null;
+
+    function loadState() {
+      try {
+        const saved = JSON.parse(localStorage.getItem(STORAGE_KEY));
+        return saved ? mergeDefaults(saved) : structuredClone(defaultState);
+      } catch {
+        return structuredClone(defaultState);
+      }
+    }
+
+    function loadTimer() {
+      try {
+        const saved = JSON.parse(localStorage.getItem(TIMER_KEY));
+        return saved || { seconds: 900, running: false };
+      } catch {
+        return { seconds: 900, running: false };
+      }
+    }
+
+    function mergeDefaults(saved) {
+      return {
+        ...structuredClone(defaultState),
+        ...saved,
+        form: { ...structuredClone(defaultState.form), ...(saved.form || {}) }
+      };
+    }
+
+    function saveState() {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+    }
+
+    function saveTimer() {
+      localStorage.setItem(TIMER_KEY, JSON.stringify(timerState));
+    }
+
+    function formatSeconds(total) {
+      const mins = Math.floor(total / 60);
+      const secs = total % 60;
+      return `${String(mins).padStart(2, "0")}:${String(secs).padStart(2, "0")}`;
+    }
+
+    function wordSet(text) {
+      return [...new Set((text || "")
+        .toLowerCase()
+        .replace(/[^a-z0-9\s]/g, " ")
+        .split(/\s+/)
+        .filter(w => w.length > 3))];
+    }
+
+    function wordOverlapScore(source, recall) {
+      const sourceWords = wordSet(source);
+      const recallWords = wordSet(recall);
+      if (!sourceWords.length || !recallWords.length) return 0;
+      const matches = recallWords.filter(w => sourceWords.includes(w)).length;
+      return Math.min(100, Math.round((matches / Math.max(5, sourceWords.length * 0.45)) * 100));
+    }
+
+    function getRating(score) {
+      if (score >= 85) return { label: "Excellent", tip: "Strong retrieval. Keep spacing your reviews to make it stick." };
+      if (score >= 70) return { label: "Good", tip: "Solid recall. Improve precision on the smaller details." };
+      if (score >= 50) return { label: "Fair", tip: "You remembered the structure, but the memory trace is still weak." };
+      return { label: "Needs Work", tip: "Shrink the topic and recall fewer things more clearly." };
+    }
+
+    function getCorrections(source, recall) {
+      const sourceWords = wordSet(source);
+      const recallWords = wordSet(recall);
+      return {
+        missing: sourceWords.filter(w => !recallWords.includes(w)).slice(0, 6),
+        extra: recallWords.filter(w => !sourceWords.includes(w)).slice(0, 6)
+      };
+    }
+
+    function buildFeedback(score, corrections, focusLevel, difficulty) {
+      const notes = [];
+      if (score < 50) notes.push("Your recall was too broad. Reduce the topic size and rebuild fewer points more clearly.");
+      if (score >= 50 && score < 70) notes.push("You remembered the frame, but not enough of the substance. Repeat the same topic later today.");
+      if (score >= 70) notes.push("Good retention. Tomorrow, aim for the same recall with shorter, cleaner wording.");
+      if (corrections.missing.length) notes.push(`Important terms missing: ${corrections.missing.join(", ")}.`);
+      if (focusLevel <= 2) notes.push("Your focus rating was low. Protect the 15 minutes from interruptions.");
+      if (difficulty >= 4 && score < 70) notes.push("The topic was probably too difficult for one session. Split it into a smaller unit next time.");
+      if (!notes.length) notes.push("Fill in the tracker and source summary to get coaching notes.");
+      return notes;
+    }
+
+    function combinedRecall() {
+      const f = state.form;
+      return [
+        f.recalledMainIdea, f.recalledKey1, f.recalledKey2, f.recalledKey3, f.recalledExample,
+        f.oneLineSummary, f.realLifeUse, f.keywords, f.triggerQuestion, f.delayedRecall, f.connectionToPrevious
+      ].join(" ");
+    }
+
+    function getCompletion() {
+      const required = [
+        state.form.topic, state.form.sourceSummary, state.form.recalledMainIdea, state.form.recalledKey1,
+        state.form.recalledKey2, state.form.recalledKey3, state.form.recalledExample,
+        state.form.oneLineSummary, state.form.realLifeUse, state.form.keywords, state.form.triggerQuestion
+      ];
+      const filled = required.filter(v => String(v).trim().length > 0).length;
+      return Math.round((filled / required.length) * 100);
+    }
+
+    function currentPlan() {
+      return dayPlans.find(d => d.day === state.day) || dayPlans[0];
+    }
+
+    function currentExerciseText() {
+      const items = dailyExercises[state.day] || dailyExercises[1];
+      return items[state.todayExerciseIndex % items.length];
+    }
+
+    function renderDays() {
+      const dayGrid = document.getElementById("dayGrid");
+      dayGrid.innerHTML = "";
+      dayPlans.forEach(d => {
+        const btn = document.createElement("button");
+        btn.className = `day-btn ${state.day === d.day ? "active" : ""}`;
+        btn.innerHTML = `<div class="tiny muted">Day ${d.day}</div><div><strong>${d.title}</strong></div>`;
+        btn.onclick = () => {
+          state.day = d.day;
+          state.todayExerciseIndex = 0;
+          state.started = false;
+          saveState();
+          render();
+        };
+        dayGrid.appendChild(btn);
+      });
+    }
+
+    function syncInputsFromState() {
+      fields.forEach(id => {
+        const el = document.getElementById(id);
+        if (!el) return;
+        if (el.type === "range") {
+          el.value = state.form[id];
+        } else {
+          el.value = state.form[id] || "";
+        }
+      });
+      document.getElementById("difficultyValue").textContent = state.form.difficulty;
+      document.getElementById("focusLevelValue").textContent = state.form.focusLevel;
+    }
+
+    function attachInputHandlers() {
+      fields.forEach(id => {
+        const el = document.getElementById(id);
+        if (!el || el.dataset.bound === "1") return;
+        el.addEventListener("input", e => {
+          state.form[id] = el.type === "range" ? Number(e.target.value) : e.target.value;
+          if (id === "difficulty") document.getElementById("difficultyValue").textContent = state.form.difficulty;
+          if (id === "focusLevel") document.getElementById("focusLevelValue").textContent = state.form.focusLevel;
+          saveState();
+          renderSide();
+          renderCompletion();
+        });
+        el.dataset.bound = "1";
+      });
+    }
+
+    function renderCompletion() {
+      const completion = getCompletion();
+      document.getElementById("completionText").textContent = `${completion}%`;
+      document.getElementById("completionBar").style.width = `${completion}%`;
+    }
+
+    function renderTimer() {
+      document.getElementById("timerText").textContent = formatSeconds(timerState.seconds);
+      document.getElementById("startPauseTimerBtn").textContent = timerState.running ? "Pause" : "Start";
+    }
+
+    function startTimer() {
+      if (timerInterval) clearInterval(timerInterval);
+      timerInterval = setInterval(() => {
+        if (!timerState.running) return;
+        timerState.seconds -= 1;
+        if (timerState.seconds <= 0) {
+          timerState.seconds = 0;
+          timerState.running = false;
+          clearInterval(timerInterval);
+        }
+        saveTimer();
+        renderTimer();
+      }, 1000);
+    }
+
+    function renderSide() {
+      const score = wordOverlapScore(state.form.sourceSummary, combinedRecall());
+      const rating = getRating(score);
+      const corrections = getCorrections(state.form.sourceSummary, combinedRecall());
+      const notes = buildFeedback(score, corrections, state.form.focusLevel, state.form.difficulty);
+
+      document.getElementById("scoreText").textContent = `${score}%`;
+      document.getElementById("ratingPill").textContent = rating.label;
+      document.getElementById("ratingTip").textContent = rating.tip;
+      document.getElementById("missingTerms").textContent = corrections.missing.length ? corrections.missing.join(", ") : "No obvious missing terms yet.";
+      document.getElementById("extraTerms").textContent = corrections.extra.length ? corrections.extra.join(", ") : "No obvious extras yet.";
+
+      const notesWrap = document.getElementById("coachingNotes");
+      notesWrap.innerHTML = "";
+      notes.forEach(n => {
+        const item = document.createElement("div");
+        item.textContent = `• ${n}`;
+        notesWrap.appendChild(item);
+      });
+    }
+
+    function renderSavedSessions() {
+      const wrap = document.getElementById("savedSessions");
+      wrap.innerHTML = "";
+      if (!state.history.length) {
+        const empty = document.createElement("p");
+        empty.className = "muted";
+        empty.textContent = "No saved sessions yet.";
+        wrap.appendChild(empty);
+        return;
+      }
+
+      state.history.forEach(item => {
+        const div = document.createElement("div");
+        div.className = "saved-item";
+        div.innerHTML = `
+          <div class="row">
+            <div>
+              <div><strong>Day ${item.day}: ${item.title}</strong></div>
+              <div class="tiny muted">${item.dateLabel}</div>
+            </div>
+            <span class="pill">${item.score}%</span>
+          </div>
+          <div class="muted" style="margin-top:8px;">${item.topic || "No topic entered"}</div>
+        `;
+        wrap.appendChild(div);
+      });
+    }
+
+    function renderMeta() {
+      const plan = currentPlan();
+      document.getElementById("currentDayChip").textContent = `Day ${state.day}`;
+      document.getElementById("streakChip").textContent = `Streak ${state.streak}`;
+      document.getElementById("goalTitle").textContent = plan.goal;
+      document.getElementById("goalPrompt").textContent = plan.prompt;
+      document.getElementById("goalFocus").textContent = plan.focus;
+      document.getElementById("todayExercise").textContent = currentExerciseText();
+      document.getElementById("exerciseSection").classList.toggle("hidden", !state.started);
+      document.getElementById("delayedRecallWrap").classList.toggle("hidden", state.day !== 4);
+      document.getElementById("connectionWrap").classList.toggle("hidden", state.day < 5);
+    }
+
+    function render() {
+      renderDays();
+      renderMeta();
+      syncInputsFromState();
+      attachInputHandlers();
+      renderCompletion();
+      renderSide();
+      renderSavedSessions();
+      renderTimer();
+      saveState();
+    }
+
+    document.getElementById("refreshExerciseBtn").onclick = () => {
+      const items = dailyExercises[state.day] || dailyExercises[1];
+      state.todayExerciseIndex = (state.todayExerciseIndex + 1) % items.length;
+      saveState();
+      renderMeta();
+    };
+
+    document.getElementById("startExerciseBtn").onclick = () => {
+      state.started = true;
+      saveState();
+      render();
+    };
+
+    document.getElementById("topicIdeaBtn").onclick = () => {
+      const i = Math.floor(Math.random() * topicIdeas.length);
+      state.form.topic = topicIdeas[i];
+      saveState();
+      render();
+    };
+
+    document.getElementById("saveBtn").onclick = () => {
+      const today = new Date().toISOString().slice(0, 10);
+      const score = wordOverlapScore(state.form.sourceSummary, combinedRecall());
+      const rating = getRating(score);
+      const exists = state.history.some(h => h.day === state.day && h.savedOn === today);
+      if (!exists) state.streak += 1;
+
+      const entry = {
+        day: state.day,
+        title: currentPlan().title,
+        topic: state.form.topic,
+        score,
+        rating: rating.label,
+        savedOn: today,
+        dateLabel: new Date().toLocaleDateString()
+      };
+
+      state.history = [entry, ...state.history.filter(h => !(h.day === state.day && h.savedOn === today))];
+      saveState();
+      render();
+    };
+
+    document.getElementById("nextDayBtn").onclick = () => {
+      state.day = state.day < 7 ? state.day + 1 : 1;
+      state.started = false;
+      state.todayExerciseIndex = 0;
+      state.form = structuredClone(defaultState.form);
+      timerState = { seconds: 900, running: false };
+      saveState();
+      saveTimer();
+      render();
+    };
+
+    document.getElementById("resetBtn").onclick = () => {
+      state.form = structuredClone(defaultState.form);
+      state.started = false;
+      timerState = { seconds: 900, running: false };
+      saveState();
+      saveTimer();
+      render();
+    };
+
+    document.getElementById("startPauseTimerBtn").onclick = () => {
+      if (timerState.seconds === 0) timerState.seconds = 900;
+      timerState.running = !timerState.running;
+      saveTimer();
+      renderTimer();
+      startTimer();
+    };
+
+    document.getElementById("resetTimerBtn").onclick = () => {
+      timerState = { seconds: 900, running: false };
+      saveTimer();
+      renderTimer();
+    };
+
+    startTimer();
+    render();
+  </script></body>
+</html><!DOCTYPE html><html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Memory Trainer</title>
+  <style>
+    :root {
+      --bg: #f8fafc;
+      --card: #ffffff;
+      --text: #0f172a;
+      --muted: #64748b;
+      --line: #e2e8f0;
+      --soft: #f1f5f9;
+      --accent: #0f172a;
+      --accent-2: #1e293b;
+      --good: #16a34a;
+      --warn: #ca8a04;
+      --bad: #dc2626;
+      --radius: 18px;
+      --shadow: 0 8px 24px rgba(15, 23, 42, 0.06);
+    }* { box-sizing: border-box; }
+body {
+  margin: 0;
+  font-family: Inter, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  background: var(--bg);
+  color: var(--text);
+}
+
+.app {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 16px;
+  display: grid;
+  gap: 16px;
+}
+
+.grid {
+  display: grid;
+  gap: 16px;
+}
+
+@media (min-width: 980px) {
+  .layout {
+    grid-template-columns: 2fr 1fr;
+    align-items: start;
+  }
+}
+
+.card {
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  padding: 16px;
+}
+
+.dark-card {
+  background: var(--accent);
+  color: #fff;
+  border-radius: var(--radius);
+  padding: 16px;
+}
+
+h1, h2, h3, p { margin: 0; }
+h1 { font-size: 1.6rem; }
+h2 { font-size: 1.1rem; }
+h3 { font-size: 1rem; }
+
+.muted { color: var(--muted); }
+.dark-card .muted { color: #cbd5e1; }
+
+.row {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.stack { display: grid; gap: 12px; }
+.stack-sm { display: grid; gap: 8px; }
+.chips { display: flex; gap: 8px; flex-wrap: wrap; }
+
+.chip {
+  font-size: 0.82rem;
+  padding: 8px 12px;
+  background: var(--soft);
+  border: 1px solid var(--line);
+  border-radius: 999px;
+}
+
+.day-grid {
+  display: grid;
+  gap: 10px;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+@media (min-width: 700px) {
+  .day-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+}
+
+.day-btn {
+  text-align: left;
+  padding: 12px;
+  border-radius: 16px;
+  border: 1px solid transparent;
+  background: var(--soft);
+  cursor: pointer;
+  color: var(--text);
+}
+
+.day-btn.active {
+  background: #fff;
+  border-color: #cbd5e1;
+  box-shadow: var(--shadow);
+}
+
+.btn-row {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+button {
+  border: 0;
+  border-radius: 14px;
+  padding: 11px 14px;
+  cursor: pointer;
+  font-weight: 600;
+  background: var(--accent);
+  color: #fff;
+}
+
+button.secondary {
+  background: #fff;
+  color: var(--text);
+  border: 1px solid var(--line);
+}
+
+button.ghost {
+  background: transparent;
+  color: inherit;
+  border: 1px solid rgba(255,255,255,0.2);
+}
+
+.fields-2, .fields-3 {
+  display: grid;
+  gap: 12px;
+}
+
+@media (min-width: 760px) {
+  .fields-2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .fields-3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+}
+
+label {
+  display: grid;
+  gap: 6px;
+  font-size: 0.92rem;
+  font-weight: 600;
+}
+
+input[type="text"], textarea {
+  width: 100%;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  padding: 12px;
+  font: inherit;
+  color: var(--text);
+  background: #fff;
+}
+
+textarea { min-height: 90px; resize: vertical; }
+
+input[type="range"] { width: 100%; }
+
+.section-soft {
+  background: var(--soft);
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  padding: 14px;
+}
+
+.progress-wrap {
+  display: grid;
+  gap: 8px;
+}
+
+.progress {
+  width: 100%;
+  height: 10px;
+  border-radius: 999px;
+  background: #e2e8f0;
+  overflow: hidden;
+}
+
+.progress-bar {
+  height: 100%;
+  width: 0%;
+  background: var(--accent);
+  transition: width 0.25s ease;
+}
+
+.score {
+  font-size: 2.4rem;
+  font-weight: 800;
+}
+
+.pill {
+  display: inline-block;
+  padding: 8px 12px;
+  border-radius: 999px;
+  background: var(--soft);
+  border: 1px solid var(--line);
+  font-size: 0.85rem;
+  font-weight: 700;
+}
+
+.tiny { font-size: 0.8rem; }
+.list { display: grid; gap: 10px; }
+.saved-item { background: var(--soft); border: 1px solid var(--line); border-radius: 16px; padding: 12px; }
+.hidden { display: none !important; }
+
+  </style>
+</head>
+<body>
+  <div class="app layout">
+    <div class="grid">
+      <section class="card stack">
+        <div class="row">
+          <div class="stack-sm">
+            <h1>Memory Trainer</h1>
+            <p class="muted">Single-file mobile app for your 15-minute daily memory training.</p>
+          </div>
+          <div class="chips">
+            <span class="chip" id="currentDayChip">Day 1</span>
+            <span class="chip" id="streakChip">Streak 0</span>
+          </div>
+        </div><div class="day-grid" id="dayGrid"></div>
+
+    <div class="section-soft stack-sm">
+      <div class="tiny muted">Goal</div>
+      <h2 id="goalTitle"></h2>
+      <p class="muted" id="goalPrompt"></p>
+      <p class="tiny"><strong>Focus:</strong> <span id="goalFocus"></span></p>
+    </div>
+
+    <div class="dark-card stack-sm">
+      <div class="row">
+        <div class="stack-sm" style="flex:1; min-width: 220px;">
+          <div class="tiny muted">Today's Exercise</div>
+          <h3 id="todayExercise"></h3>
+        </div>
+        <button class="ghost" id="refreshExerciseBtn">Refresh</button>
+      </div>
+    </div>
+
+    <div class="fields-2">
+      <div class="progress-wrap">
+        <div class="row">
+          <span><strong>Completion</strong></span>
+          <span id="completionText">0%</span>
+        </div>
+        <div class="progress"><div class="progress-bar" id="completionBar"></div></div>
+      </div>
+
+      <div class="card" style="padding:14px; box-shadow:none;">
+        <div class="row">
+          <div class="stack-sm">
+            <div class="tiny muted">15-minute timer</div>
+            <div class="score" style="font-size:1.8rem;" id="timerText">15:00</div>
+          </div>
+          <div class="btn-row">
+            <button class="secondary" id="startPauseTimerBtn">Start</button>
+            <button class="secondary" id="resetTimerBtn">Reset</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="btn-row">
+      <button id="startExerciseBtn">Start Exercise</button>
+      <button class="secondary" id="topicIdeaBtn">Give Me a Topic Idea</button>
+      <button class="secondary" id="saveBtn">Save Progress</button>
+      <button class="secondary" id="nextDayBtn">Next Day</button>
+      <button class="secondary" id="resetBtn">Reset</button>
+    </div>
+  </section>
+
+  <section class="card stack hidden" id="exerciseSection">
+    <h2>Daily Tracker</h2>
+
+    <div class="fields-2">
+      <label>Topic
+        <input type="text" id="topic" placeholder="What topic did you study today?" />
+      </label>
+      <label>Source summary
+        <input type="text" id="sourceSummary" placeholder="Briefly summarize the source so the app can score you" />
+      </label>
+    </div>
+
+    <div class="section-soft stack">
+      <h3>Recall</h3>
+      <label>Main idea from memory
+        <textarea id="recalledMainIdea"></textarea>
+      </label>
+      <div class="fields-3">
+        <label>Key point 1
+          <input type="text" id="recalledKey1" />
+        </label>
+        <label>Key point 2
+          <input type="text" id="recalledKey2" />
+        </label>
+        <label>Key point 3
+          <input type="text" id="recalledKey3" />
+        </label>
+      </div>
+      <label>One example from memory
+        <textarea id="recalledExample"></textarea>
+      </label>
+    </div>
+
+    <div class="section-soft stack">
+      <h3>Compression</h3>
+      <label>One-line summary
+        <textarea id="oneLineSummary"></textarea>
+      </label>
+      <label>How can you use this in real life?
+        <textarea id="realLifeUse"></textarea>
+      </label>
+      <label>3 to 5 keywords, separated by commas
+        <input type="text" id="keywords" />
+      </label>
+      <label>Your reinforcement question
+        <input type="text" id="triggerQuestion" />
+      </label>
+    </div>
+
+    <div class="section-soft stack hidden" id="delayedRecallWrap">
+      <h3>Delayed Recall</h3>
+      <label>Come back later and recall the topic again here
+        <textarea id="delayedRecall"></textarea>
+      </label>
+    </div>
+
+    <div class="section-soft stack hidden" id="connectionWrap">
+      <h3>Connection</h3>
+      <label>How does this connect to something you learned earlier?
+        <textarea id="connectionToPrevious"></textarea>
+      </label>
+    </div>
+
+    <div class="fields-2">
+      <div class="card" style="padding:14px; box-shadow:none;">
+        <label>Difficulty: <span id="difficultyValue">3</span>/5
+          <input type="range" min="1" max="5" value="3" id="difficulty" />
+        </label>
+      </div>
+      <div class="card" style="padding:14px; box-shadow:none;">
+        <label>Focus Level: <span id="focusLevelValue">3</span>/5
+          <input type="range" min="1" max="5" value="3" id="focusLevel" />
+        </label>
+      </div>
+    </div>
+  </section>
+</div>
+
+<aside class="grid">
+  <section class="card stack">
+    <h2>Rating & Corrections</h2>
+    <div class="score" id="scoreText">0%</div>
+    <span class="pill" id="ratingPill">Needs Work</span>
+    <p class="muted" id="ratingTip">Fill in your source summary and recall to get a score.</p>
+
+    <div class="section-soft stack-sm">
+      <div>
+        <h3>Missing terms</h3>
+        <p class="muted" id="missingTerms">No obvious missing terms yet.</p>
+      </div>
+      <div>
+        <h3>Extra terms</h3>
+        <p class="muted" id="extraTerms">No obvious extras yet.</p>
+      </div>
+    </div>
+
+    <div class="card" style="padding:14px; box-shadow:none;">
+      <h3>Coaching notes</h3>
+      <div class="list muted" id="coachingNotes"></div>
+    </div>
+  </section>
+
+  <section class="card stack">
+    <h2>Saved Sessions</h2>
+    <p class="muted tiny">Saved locally in your browser on this device.</p>
+    <div class="list" id="savedSessions"></div>
+  </section>
+</aside>
+
+  </div>  <script>
+    const STORAGE_KEY = "memory-trainer-single-file-v1";
+    const TIMER_KEY = "memory-trainer-single-file-timer-v1";
+
+    const dayPlans = [
+      { day: 1, title: "Memory Activation", goal: "Stop passive intake and start forced recall.", focus: "Main idea + 3 key points + 1 example", prompt: "Choose one short useful topic. Study it for 5 minutes, then recall the main idea, 3 key points, and 1 example without looking." },
+      { day: 2, title: "Clean Recall", goal: "Improve accuracy under no-look conditions.", focus: "Main idea + 3 key points + 2 examples", prompt: "Choose a short topic. Recall it without looking, then rate how accurate you were after checking." },
+      { day: 3, title: "Compression Training", goal: "Learn to simplify and retain.", focus: "1 sentence + 5 keywords", prompt: "Study a topic, recall it, then compress it into one sentence and five keywords." },
+      { day: 4, title: "Delayed Recall", goal: "Strengthen long-term retrieval.", focus: "Recall now and later", prompt: "Do your exercise, then return later and recall the same topic again from memory." },
+      { day: 5, title: "Connection Building", goal: "Link today’s learning to previous days.", focus: "Main idea + key points + 1 connection", prompt: "Study one topic, then explain how it connects to something you learned earlier this week." },
+      { day: 6, title: "Teach Back", goal: "Retain by explaining clearly.", focus: "Explain simply", prompt: "Study one topic, recall it, then explain it in very simple language." },
+      { day: 7, title: "Weekly Memory Test", goal: "Pull the week together into one memory network.", focus: "Recall multiple topics", prompt: "Recall the main ideas from the week and write what ties them together." }
+    ];
+
+    const topicIdeas = [
+      "A short business article",
+      "A sales concept you need right now",
+      "A pricing principle",
+      "A system or process idea",
+      "A short YouTube explainer",
+      "A marketing concept",
+      "A negotiation lesson",
+      "A customer service principle",
+      "A productivity technique",
+      "A finance basic you want to remember"
+    ];
+
+    const dailyExercises = {
+      1: [
+        "Study one small topic for 5 minutes. Then write the main idea, 3 key points, and 1 real-world example from memory.",
+        "Choose one concept you actually need this week. Recall it without looking and compress it into one clean explanation.",
+        "Read one short useful article. Then rebuild it from memory using only the key idea, 3 points, and one example."
+      ],
+      2: [
+        "Study one topic for 5 minutes. Recall the main idea, 3 key points, and 2 examples before checking.",
+        "Choose a short explainer. Write what it said from memory first, then compare for gaps.",
+        "Take one business idea and recall it without notes. Push for accuracy, not volume."
+      ],
+      3: [
+        "Study one topic and compress it into 1 sentence and 5 keywords from memory.",
+        "Read one page and turn it into a one-line rule plus 5 anchors.",
+        "Choose a short concept and strip it down to the simplest memorable form."
+      ],
+      4: [
+        "Study one topic. Do immediate recall now, then come back later for delayed recall.",
+        "Read one short lesson, recall it now, then test yourself again later today.",
+        "Choose one concept and challenge your brain twice: immediate and delayed retrieval."
+      ],
+      5: [
+        "Study one topic and explain how it connects to something you learned earlier this week.",
+        "Take a new idea and link it to an older one. The connection is the memory booster.",
+        "Read one short concept and force one strategic connection to prior learning."
+      ],
+      6: [
+        "Study one topic and teach it back simply, as if to a child.",
+        "Choose one concept and explain it in plain language with no jargon.",
+        "Take one idea and rewrite it so even a beginner could understand it."
+      ],
+      7: [
+        "Without reviewing first, recall the main ideas from the week and write the pattern connecting them.",
+        "Use today as a memory test: retrieve the week, then organize the week.",
+        "Pull together several topics and explain the bigger pattern linking them."
+      ]
+    };
+
+    const fields = [
+      "topic", "sourceSummary", "recalledMainIdea", "recalledKey1", "recalledKey2", "recalledKey3",
+      "recalledExample", "oneLineSummary", "realLifeUse", "keywords", "triggerQuestion", "delayedRecall",
+      "connectionToPrevious", "difficulty", "focusLevel"
+    ];
+
+    const defaultState = {
+      day: 1,
+      streak: 0,
+      started: false,
+      todayExerciseIndex: 0,
+      history: [],
+      form: {
+        topic: "",
+        sourceSummary: "",
+        recalledMainIdea: "",
+        recalledKey1: "",
+        recalledKey2: "",
+        recalledKey3: "",
+        recalledExample: "",
+        oneLineSummary: "",
+        realLifeUse: "",
+        keywords: "",
+        triggerQuestion: "",
+        delayedRecall: "",
+        connectionToPrevious: "",
+        difficulty: 3,
+        focusLevel: 3
+      }
+    };
+
+    let state = loadState();
+    let timerState = loadTimer();
+    let timerInterval = null;
+
+    function loadState() {
+      try {
+        const saved = JSON.parse(localStorage.getItem(STORAGE_KEY));
+        return saved ? mergeDefaults(saved) : structuredClone(defaultState);
+      } catch {
+        return structuredClone(defaultState);
+      }
+    }
+
+    function loadTimer() {
+      try {
+        const saved = JSON.parse(localStorage.getItem(TIMER_KEY));
+        return saved || { seconds: 900, running: false };
+      } catch {
+        return { seconds: 900, running: false };
+      }
+    }
+
+    function mergeDefaults(saved) {
+      return {
+        ...structuredClone(defaultState),
+        ...saved,
+        form: { ...structuredClone(defaultState.form), ...(saved.form || {}) }
+      };
+    }
+
+    function saveState() {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+    }
+
+    function saveTimer() {
+      localStorage.setItem(TIMER_KEY, JSON.stringify(timerState));
+    }
+
+    function formatSeconds(total) {
+      const mins = Math.floor(total / 60);
+      const secs = total % 60;
+      return `${String(mins).padStart(2, "0")}:${String(secs).padStart(2, "0")}`;
+    }
+
+    function wordSet(text) {
+      return [...new Set((text || "")
+        .toLowerCase()
+        .replace(/[^a-z0-9\s]/g, " ")
+        .split(/\s+/)
+        .filter(w => w.length > 3))];
+    }
+
+    function wordOverlapScore(source, recall) {
+      const sourceWords = wordSet(source);
+      const recallWords = wordSet(recall);
+      if (!sourceWords.length || !recallWords.length) return 0;
+      const matches = recallWords.filter(w => sourceWords.includes(w)).length;
+      return Math.min(100, Math.round((matches / Math.max(5, sourceWords.length * 0.45)) * 100));
+    }
+
+    function getRating(score) {
+      if (score >= 85) return { label: "Excellent", tip: "Strong retrieval. Keep spacing your reviews to make it stick." };
+      if (score >= 70) return { label: "Good", tip: "Solid recall. Improve precision on the smaller details." };
+      if (score >= 50) return { label: "Fair", tip: "You remembered the structure, but the memory trace is still weak." };
+      return { label: "Needs Work", tip: "Shrink the topic and recall fewer things more clearly." };
+    }
+
+    function getCorrections(source, recall) {
+      const sourceWords = wordSet(source);
+      const recallWords = wordSet(recall);
+      return {
+        missing: sourceWords.filter(w => !recallWords.includes(w)).slice(0, 6),
+        extra: recallWords.filter(w => !sourceWords.includes(w)).slice(0, 6)
+      };
+    }
+
+    function buildFeedback(score, corrections, focusLevel, difficulty) {
+      const notes = [];
+      if (score < 50) notes.push("Your recall was too broad. Reduce the topic size and rebuild fewer points more clearly.");
+      if (score >= 50 && score < 70) notes.push("You remembered the frame, but not enough of the substance. Repeat the same topic later today.");
+      if (score >= 70) notes.push("Good retention. Tomorrow, aim for the same recall with shorter, cleaner wording.");
+      if (corrections.missing.length) notes.push(`Important terms missing: ${corrections.missing.join(", ")}.`);
+      if (focusLevel <= 2) notes.push("Your focus rating was low. Protect the 15 minutes from interruptions.");
+      if (difficulty >= 4 && score < 70) notes.push("The topic was probably too difficult for one session. Split it into a smaller unit next time.");
+      if (!notes.length) notes.push("Fill in the tracker and source summary to get coaching notes.");
+      return notes;
+    }
+
+    function combinedRecall() {
+      const f = state.form;
+      return [
+        f.recalledMainIdea, f.recalledKey1, f.recalledKey2, f.recalledKey3, f.recalledExample,
+        f.oneLineSummary, f.realLifeUse, f.keywords, f.triggerQuestion, f.delayedRecall, f.connectionToPrevious
+      ].join(" ");
+    }
+
+    function getCompletion() {
+      const required = [
+        state.form.topic, state.form.sourceSummary, state.form.recalledMainIdea, state.form.recalledKey1,
+        state.form.recalledKey2, state.form.recalledKey3, state.form.recalledExample,
+        state.form.oneLineSummary, state.form.realLifeUse, state.form.keywords, state.form.triggerQuestion
+      ];
+      const filled = required.filter(v => String(v).trim().length > 0).length;
+      return Math.round((filled / required.length) * 100);
+    }
+
+    function currentPlan() {
+      return dayPlans.find(d => d.day === state.day) || dayPlans[0];
+    }
+
+    function currentExerciseText() {
+      const items = dailyExercises[state.day] || dailyExercises[1];
+      return items[state.todayExerciseIndex % items.length];
+    }
+
+    function renderDays() {
+      const dayGrid = document.getElementById("dayGrid");
+      dayGrid.innerHTML = "";
+      dayPlans.forEach(d => {
+        const btn = document.createElement("button");
+        btn.className = `day-btn ${state.day === d.day ? "active" : ""}`;
+        btn.innerHTML = `<div class="tiny muted">Day ${d.day}</div><div><strong>${d.title}</strong></div>`;
+        btn.onclick = () => {
+          state.day = d.day;
+          state.todayExerciseIndex = 0;
+          state.started = false;
+          saveState();
+          render();
+        };
+        dayGrid.appendChild(btn);
+      });
+    }
+
+    function syncInputsFromState() {
+      fields.forEach(id => {
+        const el = document.getElementById(id);
+        if (!el) return;
+        if (el.type === "range") {
+          el.value = state.form[id];
+        } else {
+          el.value = state.form[id] || "";
+        }
+      });
+      document.getElementById("difficultyValue").textContent = state.form.difficulty;
+      document.getElementById("focusLevelValue").textContent = state.form.focusLevel;
+    }
+
+    function attachInputHandlers() {
+      fields.forEach(id => {
+        const el = document.getElementById(id);
+        if (!el || el.dataset.bound === "1") return;
+        el.addEventListener("input", e => {
+          state.form[id] = el.type === "range" ? Number(e.target.value) : e.target.value;
+          if (id === "difficulty") document.getElementById("difficultyValue").textContent = state.form.difficulty;
+          if (id === "focusLevel") document.getElementById("focusLevelValue").textContent = state.form.focusLevel;
+          saveState();
+          renderSide();
+          renderCompletion();
+        });
+        el.dataset.bound = "1";
+      });
+    }
+
+    function renderCompletion() {
+      const completion = getCompletion();
+      document.getElementById("completionText").textContent = `${completion}%`;
+      document.getElementById("completionBar").style.width = `${completion}%`;
+    }
+
+    function renderTimer() {
+      document.getElementById("timerText").textContent = formatSeconds(timerState.seconds);
+      document.getElementById("startPauseTimerBtn").textContent = timerState.running ? "Pause" : "Start";
+    }
+
+    function startTimer() {
+      if (timerInterval) clearInterval(timerInterval);
+      timerInterval = setInterval(() => {
+        if (!timerState.running) return;
+        timerState.seconds -= 1;
+        if (timerState.seconds <= 0) {
+          timerState.seconds = 0;
+          timerState.running = false;
+          clearInterval(timerInterval);
+        }
+        saveTimer();
+        renderTimer();
+      }, 1000);
+    }
+
+    function renderSide() {
+      const score = wordOverlapScore(state.form.sourceSummary, combinedRecall());
+      const rating = getRating(score);
+      const corrections = getCorrections(state.form.sourceSummary, combinedRecall());
+      const notes = buildFeedback(score, corrections, state.form.focusLevel, state.form.difficulty);
+
+      document.getElementById("scoreText").textContent = `${score}%`;
+      document.getElementById("ratingPill").textContent = rating.label;
+      document.getElementById("ratingTip").textContent = rating.tip;
+      document.getElementById("missingTerms").textContent = corrections.missing.length ? corrections.missing.join(", ") : "No obvious missing terms yet.";
+      document.getElementById("extraTerms").textContent = corrections.extra.length ? corrections.extra.join(", ") : "No obvious extras yet.";
+
+      const notesWrap = document.getElementById("coachingNotes");
+      notesWrap.innerHTML = "";
+      notes.forEach(n => {
+        const item = document.createElement("div");
+        item.textContent = `• ${n}`;
+        notesWrap.appendChild(item);
+      });
+    }
+
+    function renderSavedSessions() {
+      const wrap = document.getElementById("savedSessions");
+      wrap.innerHTML = "";
+      if (!state.history.length) {
+        const empty = document.createElement("p");
+        empty.className = "muted";
+        empty.textContent = "No saved sessions yet.";
+        wrap.appendChild(empty);
+        return;
+      }
+
+      state.history.forEach(item => {
+        const div = document.createElement("div");
+        div.className = "saved-item";
+        div.innerHTML = `
+          <div class="row">
+            <div>
+              <div><strong>Day ${item.day}: ${item.title}</strong></div>
+              <div class="tiny muted">${item.dateLabel}</div>
+            </div>
+            <span class="pill">${item.score}%</span>
+          </div>
+          <div class="muted" style="margin-top:8px;">${item.topic || "No topic entered"}</div>
+        `;
+        wrap.appendChild(div);
+      });
+    }
+
+    function renderMeta() {
+      const plan = currentPlan();
+      document.getElementById("currentDayChip").textContent = `Day ${state.day}`;
+      document.getElementById("streakChip").textContent = `Streak ${state.streak}`;
+      document.getElementById("goalTitle").textContent = plan.goal;
+      document.getElementById("goalPrompt").textContent = plan.prompt;
+      document.getElementById("goalFocus").textContent = plan.focus;
+      document.getElementById("todayExercise").textContent = currentExerciseText();
+      document.getElementById("exerciseSection").classList.toggle("hidden", !state.started);
+      document.getElementById("delayedRecallWrap").classList.toggle("hidden", state.day !== 4);
+      document.getElementById("connectionWrap").classList.toggle("hidden", state.day < 5);
+    }
+
+    function render() {
+      renderDays();
+      renderMeta();
+      syncInputsFromState();
+      attachInputHandlers();
+      renderCompletion();
+      renderSide();
+      renderSavedSessions();
+      renderTimer();
+      saveState();
+    }
+
+    document.getElementById("refreshExerciseBtn").onclick = () => {
+      const items = dailyExercises[state.day] || dailyExercises[1];
+      state.todayExerciseIndex = (state.todayExerciseIndex + 1) % items.length;
+      saveState();
+      renderMeta();
+    };
+
+    document.getElementById("startExerciseBtn").onclick = () => {
+      state.started = true;
+      saveState();
+      render();
+    };
+
+    document.getElementById("topicIdeaBtn").onclick = () => {
+      const i = Math.floor(Math.random() * topicIdeas.length);
+      state.form.topic = topicIdeas[i];
+      saveState();
+      render();
+    };
+
+    document.getElementById("saveBtn").onclick = () => {
+      const today = new Date().toISOString().slice(0, 10);
+      const score = wordOverlapScore(state.form.sourceSummary, combinedRecall());
+      const rating = getRating(score);
+      const exists = state.history.some(h => h.day === state.day && h.savedOn === today);
+      if (!exists) state.streak += 1;
+
+      const entry = {
+        day: state.day,
+        title: currentPlan().title,
+        topic: state.form.topic,
+        score,
+        rating: rating.label,
+        savedOn: today,
+        dateLabel: new Date().toLocaleDateString()
+      };
+
+      state.history = [entry, ...state.history.filter(h => !(h.day === state.day && h.savedOn === today))];
+      saveState();
+      render();
+    };
+
+    document.getElementById("nextDayBtn").onclick = () => {
+      state.day = state.day < 7 ? state.day + 1 : 1;
+      state.started = false;
+      state.todayExerciseIndex = 0;
+      state.form = structuredClone(defaultState.form);
+      timerState = { seconds: 900, running: false };
+      saveState();
+      saveTimer();
+      render();
+    };
+
+    document.getElementById("resetBtn").onclick = () => {
+      state.form = structuredClone(defaultState.form);
+      state.started = false;
+      timerState = { seconds: 900, running: false };
+      saveState();
+      saveTimer();
+      render();
+    };
+
+    document.getElementById("startPauseTimerBtn").onclick = () => {
+      if (timerState.seconds === 0) timerState.seconds = 900;
+      timerState.running = !timerState.running;
+      saveTimer();
+      renderTimer();
+      startTimer();
+    };
+
+    document.getElementById("resetTimerBtn").onclick = () => {
+      timerState = { seconds: 900, running: false };
+      saveTimer();
+      renderTimer();
+    };
+
+    startTimer();
+    render();
+  </script></body>
+</html><!DOCTYPE html><html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Memory Trainer</title>
+  <style>
+    :root {
+      --bg: #f8fafc;
+      --card: #ffffff;
+      --text: #0f172a;
+      --muted: #64748b;
+      --line: #e2e8f0;
+      --soft: #f1f5f9;
+      --accent: #0f172a;
+      --accent-2: #1e293b;
+      --good: #16a34a;
+      --warn: #ca8a04;
+      --bad: #dc2626;
+      --radius: 18px;
+      --shadow: 0 8px 24px rgba(15, 23, 42, 0.06);
+    }* { box-sizing: border-box; }
+body {
+  margin: 0;
+  font-family: Inter, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  background: var(--bg);
+  color: var(--text);
+}
+
+.app {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 16px;
+  display: grid;
+  gap: 16px;
+}
+
+.grid {
+  display: grid;
+  gap: 16px;
+}
+
+@media (min-width: 980px) {
+  .layout {
+    grid-template-columns: 2fr 1fr;
+    align-items: start;
+  }
+}
+
+.card {
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  padding: 16px;
+}
+
+.dark-card {
+  background: var(--accent);
+  color: #fff;
+  border-radius: var(--radius);
+  padding: 16px;
+}
+
+h1, h2, h3, p { margin: 0; }
+h1 { font-size: 1.6rem; }
+h2 { font-size: 1.1rem; }
+h3 { font-size: 1rem; }
+
+.muted { color: var(--muted); }
+.dark-card .muted { color: #cbd5e1; }
+
+.row {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.stack { display: grid; gap: 12px; }
+.stack-sm { display: grid; gap: 8px; }
+.chips { display: flex; gap: 8px; flex-wrap: wrap; }
+
+.chip {
+  font-size: 0.82rem;
+  padding: 8px 12px;
+  background: var(--soft);
+  border: 1px solid var(--line);
+  border-radius: 999px;
+}
+
+.day-grid {
+  display: grid;
+  gap: 10px;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+@media (min-width: 700px) {
+  .day-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+}
+
+.day-btn {
+  text-align: left;
+  padding: 12px;
+  border-radius: 16px;
+  border: 1px solid transparent;
+  background: var(--soft);
+  cursor: pointer;
+  color: var(--text);
+}
+
+.day-btn.active {
+  background: #fff;
+  border-color: #cbd5e1;
+  box-shadow: var(--shadow);
+}
+
+.btn-row {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+button {
+  border: 0;
+  border-radius: 14px;
+  padding: 11px 14px;
+  cursor: pointer;
+  font-weight: 600;
+  background: var(--accent);
+  color: #fff;
+}
+
+button.secondary {
+  background: #fff;
+  color: var(--text);
+  border: 1px solid var(--line);
+}
+
+button.ghost {
+  background: transparent;
+  color: inherit;
+  border: 1px solid rgba(255,255,255,0.2);
+}
+
+.fields-2, .fields-3 {
+  display: grid;
+  gap: 12px;
+}
+
+@media (min-width: 760px) {
+  .fields-2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .fields-3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+}
+
+label {
+  display: grid;
+  gap: 6px;
+  font-size: 0.92rem;
+  font-weight: 600;
+}
+
+input[type="text"], textarea {
+  width: 100%;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  padding: 12px;
+  font: inherit;
+  color: var(--text);
+  background: #fff;
+}
+
+textarea { min-height: 90px; resize: vertical; }
+
+input[type="range"] { width: 100%; }
+
+.section-soft {
+  background: var(--soft);
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  padding: 14px;
+}
+
+.progress-wrap {
+  display: grid;
+  gap: 8px;
+}
+
+.progress {
+  width: 100%;
+  height: 10px;
+  border-radius: 999px;
+  background: #e2e8f0;
+  overflow: hidden;
+}
+
+.progress-bar {
+  height: 100%;
+  width: 0%;
+  background: var(--accent);
+  transition: width 0.25s ease;
+}
+
+.score {
+  font-size: 2.4rem;
+  font-weight: 800;
+}
+
+.pill {
+  display: inline-block;
+  padding: 8px 12px;
+  border-radius: 999px;
+  background: var(--soft);
+  border: 1px solid var(--line);
+  font-size: 0.85rem;
+  font-weight: 700;
+}
+
+.tiny { font-size: 0.8rem; }
+.list { display: grid; gap: 10px; }
+.saved-item { background: var(--soft); border: 1px solid var(--line); border-radius: 16px; padding: 12px; }
+.hidden { display: none !important; }
+
+  </style>
+</head>
+<body>
+  <div class="app layout">
+    <div class="grid">
+      <section class="card stack">
+        <div class="row">
+          <div class="stack-sm">
+            <h1>Memory Trainer</h1>
+            <p class="muted">Single-file mobile app for your 15-minute daily memory training.</p>
+          </div>
+          <div class="chips">
+            <span class="chip" id="currentDayChip">Day 1</span>
+            <span class="chip" id="streakChip">Streak 0</span>
+          </div>
+        </div><div class="day-grid" id="dayGrid"></div>
+
+    <div class="section-soft stack-sm">
+      <div class="tiny muted">Goal</div>
+      <h2 id="goalTitle"></h2>
+      <p class="muted" id="goalPrompt"></p>
+      <p class="tiny"><strong>Focus:</strong> <span id="goalFocus"></span></p>
+    </div>
+
+    <div class="dark-card stack-sm">
+      <div class="row">
+        <div class="stack-sm" style="flex:1; min-width: 220px;">
+          <div class="tiny muted">Today's Exercise</div>
+          <h3 id="todayExercise"></h3>
+        </div>
+        <button class="ghost" id="refreshExerciseBtn">Refresh</button>
+      </div>
+    </div>
+
+    <div class="fields-2">
+      <div class="progress-wrap">
+        <div class="row">
+          <span><strong>Completion</strong></span>
+          <span id="completionText">0%</span>
+        </div>
+        <div class="progress"><div class="progress-bar" id="completionBar"></div></div>
+      </div>
+
+      <div class="card" style="padding:14px; box-shadow:none;">
+        <div class="row">
+          <div class="stack-sm">
+            <div class="tiny muted">15-minute timer</div>
+            <div class="score" style="font-size:1.8rem;" id="timerText">15:00</div>
+          </div>
+          <div class="btn-row">
+            <button class="secondary" id="startPauseTimerBtn">Start</button>
+            <button class="secondary" id="resetTimerBtn">Reset</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="btn-row">
+      <button id="startExerciseBtn">Start Exercise</button>
+      <button class="secondary" id="topicIdeaBtn">Give Me a Topic Idea</button>
+      <button class="secondary" id="saveBtn">Save Progress</button>
+      <button class="secondary" id="nextDayBtn">Next Day</button>
+      <button class="secondary" id="resetBtn">Reset</button>
+    </div>
+  </section>
+
+  <section class="card stack hidden" id="exerciseSection">
+    <h2>Daily Tracker</h2>
+
+    <div class="fields-2">
+      <label>Topic
+        <input type="text" id="topic" placeholder="What topic did you study today?" />
+      </label>
+      <label>Source summary
+        <input type="text" id="sourceSummary" placeholder="Briefly summarize the source so the app can score you" />
+      </label>
+    </div>
+
+    <div class="section-soft stack">
+      <h3>Recall</h3>
+      <label>Main idea from memory
+        <textarea id="recalledMainIdea"></textarea>
+      </label>
+      <div class="fields-3">
+        <label>Key point 1
+          <input type="text" id="recalledKey1" />
+        </label>
+        <label>Key point 2
+          <input type="text" id="recalledKey2" />
+        </label>
+        <label>Key point 3
+          <input type="text" id="recalledKey3" />
+        </label>
+      </div>
+      <label>One example from memory
+        <textarea id="recalledExample"></textarea>
+      </label>
+    </div>
+
+    <div class="section-soft stack">
+      <h3>Compression</h3>
+      <label>One-line summary
+        <textarea id="oneLineSummary"></textarea>
+      </label>
+      <label>How can you use this in real life?
+        <textarea id="realLifeUse"></textarea>
+      </label>
+      <label>3 to 5 keywords, separated by commas
+        <input type="text" id="keywords" />
+      </label>
+      <label>Your reinforcement question
+        <input type="text" id="triggerQuestion" />
+      </label>
+    </div>
+
+    <div class="section-soft stack hidden" id="delayedRecallWrap">
+      <h3>Delayed Recall</h3>
+      <label>Come back later and recall the topic again here
+        <textarea id="delayedRecall"></textarea>
+      </label>
+    </div>
+
+    <div class="section-soft stack hidden" id="connectionWrap">
+      <h3>Connection</h3>
+      <label>How does this connect to something you learned earlier?
+        <textarea id="connectionToPrevious"></textarea>
+      </label>
+    </div>
+
+    <div class="fields-2">
+      <div class="card" style="padding:14px; box-shadow:none;">
+        <label>Difficulty: <span id="difficultyValue">3</span>/5
+          <input type="range" min="1" max="5" value="3" id="difficulty" />
+        </label>
+      </div>
+      <div class="card" style="padding:14px; box-shadow:none;">
+        <label>Focus Level: <span id="focusLevelValue">3</span>/5
+          <input type="range" min="1" max="5" value="3" id="focusLevel" />
+        </label>
+      </div>
+    </div>
+  </section>
+</div>
+
+<aside class="grid">
+  <section class="card stack">
+    <h2>Rating & Corrections</h2>
+    <div class="score" id="scoreText">0%</div>
+    <span class="pill" id="ratingPill">Needs Work</span>
+    <p class="muted" id="ratingTip">Fill in your source summary and recall to get a score.</p>
+
+    <div class="section-soft stack-sm">
+      <div>
+        <h3>Missing terms</h3>
+        <p class="muted" id="missingTerms">No obvious missing terms yet.</p>
+      </div>
+      <div>
+        <h3>Extra terms</h3>
+        <p class="muted" id="extraTerms">No obvious extras yet.</p>
+      </div>
+    </div>
+
+    <div class="card" style="padding:14px; box-shadow:none;">
+      <h3>Coaching notes</h3>
+      <div class="list muted" id="coachingNotes"></div>
+    </div>
+  </section>
+
+  <section class="card stack">
+    <h2>Saved Sessions</h2>
+    <p class="muted tiny">Saved locally in your browser on this device.</p>
+    <div class="list" id="savedSessions"></div>
+  </section>
+</aside>
+
+  </div>  <script>
+    const STORAGE_KEY = "memory-trainer-single-file-v1";
+    const TIMER_KEY = "memory-trainer-single-file-timer-v1";
+
+    const dayPlans = [
+      { day: 1, title: "Memory Activation", goal: "Stop passive intake and start forced recall.", focus: "Main idea + 3 key points + 1 example", prompt: "Choose one short useful topic. Study it for 5 minutes, then recall the main idea, 3 key points, and 1 example without looking." },
+      { day: 2, title: "Clean Recall", goal: "Improve accuracy under no-look conditions.", focus: "Main idea + 3 key points + 2 examples", prompt: "Choose a short topic. Recall it without looking, then rate how accurate you were after checking." },
+      { day: 3, title: "Compression Training", goal: "Learn to simplify and retain.", focus: "1 sentence + 5 keywords", prompt: "Study a topic, recall it, then compress it into one sentence and five keywords." },
+      { day: 4, title: "Delayed Recall", goal: "Strengthen long-term retrieval.", focus: "Recall now and later", prompt: "Do your exercise, then return later and recall the same topic again from memory." },
+      { day: 5, title: "Connection Building", goal: "Link today’s learning to previous days.", focus: "Main idea + key points + 1 connection", prompt: "Study one topic, then explain how it connects to something you learned earlier this week." },
+      { day: 6, title: "Teach Back", goal: "Retain by explaining clearly.", focus: "Explain simply", prompt: "Study one topic, recall it, then explain it in very simple language." },
+      { day: 7, title: "Weekly Memory Test", goal: "Pull the week together into one memory network.", focus: "Recall multiple topics", prompt: "Recall the main ideas from the week and write what ties them together." }
+    ];
+
+    const topicIdeas = [
+      "A short business article",
+      "A sales concept you need right now",
+      "A pricing principle",
+      "A system or process idea",
+      "A short YouTube explainer",
+      "A marketing concept",
+      "A negotiation lesson",
+      "A customer service principle",
+      "A productivity technique",
+      "A finance basic you want to remember"
+    ];
+
+    const dailyExercises = {
+      1: [
+        "Study one small topic for 5 minutes. Then write the main idea, 3 key points, and 1 real-world example from memory.",
+        "Choose one concept you actually need this week. Recall it without looking and compress it into one clean explanation.",
+        "Read one short useful article. Then rebuild it from memory using only the key idea, 3 points, and one example."
+      ],
+      2: [
+        "Study one topic for 5 minutes. Recall the main idea, 3 key points, and 2 examples before checking.",
+        "Choose a short explainer. Write what it said from memory first, then compare for gaps.",
+        "Take one business idea and recall it without notes. Push for accuracy, not volume."
+      ],
+      3: [
+        "Study one topic and compress it into 1 sentence and 5 keywords from memory.",
+        "Read one page and turn it into a one-line rule plus 5 anchors.",
+        "Choose a short concept and strip it down to the simplest memorable form."
+      ],
+      4: [
+        "Study one topic. Do immediate recall now, then come back later for delayed recall.",
+        "Read one short lesson, recall it now, then test yourself again later today.",
+        "Choose one concept and challenge your brain twice: immediate and delayed retrieval."
+      ],
+      5: [
+        "Study one topic and explain how it connects to something you learned earlier this week.",
+        "Take a new idea and link it to an older one. The connection is the memory booster.",
+        "Read one short concept and force one strategic connection to prior learning."
+      ],
+      6: [
+        "Study one topic and teach it back simply, as if to a child.",
+        "Choose one concept and explain it in plain language with no jargon.",
+        "Take one idea and rewrite it so even a beginner could understand it."
+      ],
+      7: [
+        "Without reviewing first, recall the main ideas from the week and write the pattern connecting them.",
+        "Use today as a memory test: retrieve the week, then organize the week.",
+        "Pull together several topics and explain the bigger pattern linking them."
+      ]
+    };
+
+    const fields = [
+      "topic", "sourceSummary", "recalledMainIdea", "recalledKey1", "recalledKey2", "recalledKey3",
+      "recalledExample", "oneLineSummary", "realLifeUse", "keywords", "triggerQuestion", "delayedRecall",
+      "connectionToPrevious", "difficulty", "focusLevel"
+    ];
+
+    const defaultState = {
+      day: 1,
+      streak: 0,
+      started: false,
+      todayExerciseIndex: 0,
+      history: [],
+      form: {
+        topic: "",
+        sourceSummary: "",
+        recalledMainIdea: "",
+        recalledKey1: "",
+        recalledKey2: "",
+        recalledKey3: "",
+        recalledExample: "",
+        oneLineSummary: "",
+        realLifeUse: "",
+        keywords: "",
+        triggerQuestion: "",
+        delayedRecall: "",
+        connectionToPrevious: "",
+        difficulty: 3,
+        focusLevel: 3
+      }
+    };
+
+    let state = loadState();
+    let timerState = loadTimer();
+    let timerInterval = null;
+
+    function loadState() {
+      try {
+        const saved = JSON.parse(localStorage.getItem(STORAGE_KEY));
+        return saved ? mergeDefaults(saved) : structuredClone(defaultState);
+      } catch {
+        return structuredClone(defaultState);
+      }
+    }
+
+    function loadTimer() {
+      try {
+        const saved = JSON.parse(localStorage.getItem(TIMER_KEY));
+        return saved || { seconds: 900, running: false };
+      } catch {
+        return { seconds: 900, running: false };
+      }
+    }
+
+    function mergeDefaults(saved) {
+      return {
+        ...structuredClone(defaultState),
+        ...saved,
+        form: { ...structuredClone(defaultState.form), ...(saved.form || {}) }
+      };
+    }
+
+    function saveState() {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+    }
+
+    function saveTimer() {
+      localStorage.setItem(TIMER_KEY, JSON.stringify(timerState));
+    }
+
+    function formatSeconds(total) {
+      const mins = Math.floor(total / 60);
+      const secs = total % 60;
+      return `${String(mins).padStart(2, "0")}:${String(secs).padStart(2, "0")}`;
+    }
+
+    function wordSet(text) {
+      return [...new Set((text || "")
+        .toLowerCase()
+        .replace(/[^a-z0-9\s]/g, " ")
+        .split(/\s+/)
+        .filter(w => w.length > 3))];
+    }
+
+    function wordOverlapScore(source, recall) {
+      const sourceWords = wordSet(source);
+      const recallWords = wordSet(recall);
+      if (!sourceWords.length || !recallWords.length) return 0;
+      const matches = recallWords.filter(w => sourceWords.includes(w)).length;
+      return Math.min(100, Math.round((matches / Math.max(5, sourceWords.length * 0.45)) * 100));
+    }
+
+    function getRating(score) {
+      if (score >= 85) return { label: "Excellent", tip: "Strong retrieval. Keep spacing your reviews to make it stick." };
+      if (score >= 70) return { label: "Good", tip: "Solid recall. Improve precision on the smaller details." };
+      if (score >= 50) return { label: "Fair", tip: "You remembered the structure, but the memory trace is still weak." };
+      return { label: "Needs Work", tip: "Shrink the topic and recall fewer things more clearly." };
+    }
+
+    function getCorrections(source, recall) {
+      const sourceWords = wordSet(source);
+      const recallWords = wordSet(recall);
+      return {
+        missing: sourceWords.filter(w => !recallWords.includes(w)).slice(0, 6),
+        extra: recallWords.filter(w => !sourceWords.includes(w)).slice(0, 6)
+      };
+    }
+
+    function buildFeedback(score, corrections, focusLevel, difficulty) {
+      const notes = [];
+      if (score < 50) notes.push("Your recall was too broad. Reduce the topic size and rebuild fewer points more clearly.");
+      if (score >= 50 && score < 70) notes.push("You remembered the frame, but not enough of the substance. Repeat the same topic later today.");
+      if (score >= 70) notes.push("Good retention. Tomorrow, aim for the same recall with shorter, cleaner wording.");
+      if (corrections.missing.length) notes.push(`Important terms missing: ${corrections.missing.join(", ")}.`);
+      if (focusLevel <= 2) notes.push("Your focus rating was low. Protect the 15 minutes from interruptions.");
+      if (difficulty >= 4 && score < 70) notes.push("The topic was probably too difficult for one session. Split it into a smaller unit next time.");
+      if (!notes.length) notes.push("Fill in the tracker and source summary to get coaching notes.");
+      return notes;
+    }
+
+    function combinedRecall() {
+      const f = state.form;
+      return [
+        f.recalledMainIdea, f.recalledKey1, f.recalledKey2, f.recalledKey3, f.recalledExample,
+        f.oneLineSummary, f.realLifeUse, f.keywords, f.triggerQuestion, f.delayedRecall, f.connectionToPrevious
+      ].join(" ");
+    }
+
+    function getCompletion() {
+      const required = [
+        state.form.topic, state.form.sourceSummary, state.form.recalledMainIdea, state.form.recalledKey1,
+        state.form.recalledKey2, state.form.recalledKey3, state.form.recalledExample,
+        state.form.oneLineSummary, state.form.realLifeUse, state.form.keywords, state.form.triggerQuestion
+      ];
+      const filled = required.filter(v => String(v).trim().length > 0).length;
+      return Math.round((filled / required.length) * 100);
+    }
+
+    function currentPlan() {
+      return dayPlans.find(d => d.day === state.day) || dayPlans[0];
+    }
+
+    function currentExerciseText() {
+      const items = dailyExercises[state.day] || dailyExercises[1];
+      return items[state.todayExerciseIndex % items.length];
+    }
+
+    function renderDays() {
+      const dayGrid = document.getElementById("dayGrid");
+      dayGrid.innerHTML = "";
+      dayPlans.forEach(d => {
+        const btn = document.createElement("button");
+        btn.className = `day-btn ${state.day === d.day ? "active" : ""}`;
+        btn.innerHTML = `<div class="tiny muted">Day ${d.day}</div><div><strong>${d.title}</strong></div>`;
+        btn.onclick = () => {
+          state.day = d.day;
+          state.todayExerciseIndex = 0;
+          state.started = false;
+          saveState();
+          render();
+        };
+        dayGrid.appendChild(btn);
+      });
+    }
+
+    function syncInputsFromState() {
+      fields.forEach(id => {
+        const el = document.getElementById(id);
+        if (!el) return;
+        if (el.type === "range") {
+          el.value = state.form[id];
+        } else {
+          el.value = state.form[id] || "";
+        }
+      });
+      document.getElementById("difficultyValue").textContent = state.form.difficulty;
+      document.getElementById("focusLevelValue").textContent = state.form.focusLevel;
+    }
+
+    function attachInputHandlers() {
+      fields.forEach(id => {
+        const el = document.getElementById(id);
+        if (!el || el.dataset.bound === "1") return;
+        el.addEventListener("input", e => {
+          state.form[id] = el.type === "range" ? Number(e.target.value) : e.target.value;
+          if (id === "difficulty") document.getElementById("difficultyValue").textContent = state.form.difficulty;
+          if (id === "focusLevel") document.getElementById("focusLevelValue").textContent = state.form.focusLevel;
+          saveState();
+          renderSide();
+          renderCompletion();
+        });
+        el.dataset.bound = "1";
+      });
+    }
+
+    function renderCompletion() {
+      const completion = getCompletion();
+      document.getElementById("completionText").textContent = `${completion}%`;
+      document.getElementById("completionBar").style.width = `${completion}%`;
+    }
+
+    function renderTimer() {
+      document.getElementById("timerText").textContent = formatSeconds(timerState.seconds);
+      document.getElementById("startPauseTimerBtn").textContent = timerState.running ? "Pause" : "Start";
+    }
+
+    function startTimer() {
+      if (timerInterval) clearInterval(timerInterval);
+      timerInterval = setInterval(() => {
+        if (!timerState.running) return;
+        timerState.seconds -= 1;
+        if (timerState.seconds <= 0) {
+          timerState.seconds = 0;
+          timerState.running = false;
+          clearInterval(timerInterval);
+        }
+        saveTimer();
+        renderTimer();
+      }, 1000);
+    }
+
+    function renderSide() {
+      const score = wordOverlapScore(state.form.sourceSummary, combinedRecall());
+      const rating = getRating(score);
+      const corrections = getCorrections(state.form.sourceSummary, combinedRecall());
+      const notes = buildFeedback(score, corrections, state.form.focusLevel, state.form.difficulty);
+
+      document.getElementById("scoreText").textContent = `${score}%`;
+      document.getElementById("ratingPill").textContent = rating.label;
+      document.getElementById("ratingTip").textContent = rating.tip;
+      document.getElementById("missingTerms").textContent = corrections.missing.length ? corrections.missing.join(", ") : "No obvious missing terms yet.";
+      document.getElementById("extraTerms").textContent = corrections.extra.length ? corrections.extra.join(", ") : "No obvious extras yet.";
+
+      const notesWrap = document.getElementById("coachingNotes");
+      notesWrap.innerHTML = "";
+      notes.forEach(n => {
+        const item = document.createElement("div");
+        item.textContent = `• ${n}`;
+        notesWrap.appendChild(item);
+      });
+    }
+
+    function renderSavedSessions() {
+      const wrap = document.getElementById("savedSessions");
+      wrap.innerHTML = "";
+      if (!state.history.length) {
+        const empty = document.createElement("p");
+        empty.className = "muted";
+        empty.textContent = "No saved sessions yet.";
+        wrap.appendChild(empty);
+        return;
+      }
+
+      state.history.forEach(item => {
+        const div = document.createElement("div");
+        div.className = "saved-item";
+        div.innerHTML = `
+          <div class="row">
+            <div>
+              <div><strong>Day ${item.day}: ${item.title}</strong></div>
+              <div class="tiny muted">${item.dateLabel}</div>
+            </div>
+            <span class="pill">${item.score}%</span>
+          </div>
+          <div class="muted" style="margin-top:8px;">${item.topic || "No topic entered"}</div>
+        `;
+        wrap.appendChild(div);
+      });
+    }
+
+    function renderMeta() {
+      const plan = currentPlan();
+      document.getElementById("currentDayChip").textContent = `Day ${state.day}`;
+      document.getElementById("streakChip").textContent = `Streak ${state.streak}`;
+      document.getElementById("goalTitle").textContent = plan.goal;
+      document.getElementById("goalPrompt").textContent = plan.prompt;
+      document.getElementById("goalFocus").textContent = plan.focus;
+      document.getElementById("todayExercise").textContent = currentExerciseText();
+      document.getElementById("exerciseSection").classList.toggle("hidden", !state.started);
+      document.getElementById("delayedRecallWrap").classList.toggle("hidden", state.day !== 4);
+      document.getElementById("connectionWrap").classList.toggle("hidden", state.day < 5);
+    }
+
+    function render() {
+      renderDays();
+      renderMeta();
+      syncInputsFromState();
+      attachInputHandlers();
+      renderCompletion();
+      renderSide();
+      renderSavedSessions();
+      renderTimer();
+      saveState();
+    }
+
+    document.getElementById("refreshExerciseBtn").onclick = () => {
+      const items = dailyExercises[state.day] || dailyExercises[1];
+      state.todayExerciseIndex = (state.todayExerciseIndex + 1) % items.length;
+      saveState();
+      renderMeta();
+    };
+
+    document.getElementById("startExerciseBtn").onclick = () => {
+      state.started = true;
+      saveState();
+      render();
+    };
+
+    document.getElementById("topicIdeaBtn").onclick = () => {
+      const i = Math.floor(Math.random() * topicIdeas.length);
+      state.form.topic = topicIdeas[i];
+      saveState();
+      render();
+    };
+
+    document.getElementById("saveBtn").onclick = () => {
+      const today = new Date().toISOString().slice(0, 10);
+      const score = wordOverlapScore(state.form.sourceSummary, combinedRecall());
+      const rating = getRating(score);
+      const exists = state.history.some(h => h.day === state.day && h.savedOn === today);
+      if (!exists) state.streak += 1;
+
+      const entry = {
+        day: state.day,
+        title: currentPlan().title,
+        topic: state.form.topic,
+        score,
+        rating: rating.label,
+        savedOn: today,
+        dateLabel: new Date().toLocaleDateString()
+      };
+
+      state.history = [entry, ...state.history.filter(h => !(h.day === state.day && h.savedOn === today))];
+      saveState();
+      render();
+    };
+
+    document.getElementById("nextDayBtn").onclick = () => {
+      state.day = state.day < 7 ? state.day + 1 : 1;
+      state.started = false;
+      state.todayExerciseIndex = 0;
+      state.form = structuredClone(defaultState.form);
+      timerState = { seconds: 900, running: false };
+      saveState();
+      saveTimer();
+      render();
+    };
+
+    document.getElementById("resetBtn").onclick = () => {
+      state.form = structuredClone(defaultState.form);
+      state.started = false;
+      timerState = { seconds: 900, running: false };
+      saveState();
+      saveTimer();
+      render();
+    };
+
+    document.getElementById("startPauseTimerBtn").onclick = () => {
+      if (timerState.seconds === 0) timerState.seconds = 900;
+      timerState.running = !timerState.running;
+      saveTimer();
+      renderTimer();
+      startTimer();
+    };
+
+    document.getElementById("resetTimerBtn").onclick = () => {
+      timerState = { seconds: 900, running: false };
+      saveTimer();
+      renderTimer();
+    };
+
+    startTimer();
+    render();
+  </script></body>
+</html>
